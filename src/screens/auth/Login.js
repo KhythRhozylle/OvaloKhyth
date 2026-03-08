@@ -1,15 +1,18 @@
 import { useState } from 'react';
-import { Alert, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Text, TouchableOpacity, View } from 'react-native';
 
 import { useNavigation } from '@react-navigation/native';
 import CustomButton from '../../components/CustomButton';
 import CustomTextInput from '../../components/CustomTextInput';
-import { ROUTES } from '../../utils';
+import { useAuth } from '../../context/AuthContext';
+import { IMG, ROUTES } from '../../utils';
+
+const BG_COLOR = '#FDE4E4'; // Pale blush - complements the red florynn logo
 
 const Login = () => {
 const [emailAdd, setEmailAdd] = useState('');
 const [password, setPassword] = useState('');
-
+const { login } = useAuth();
 const navigation = useNavigation();
 
 return (
@@ -19,8 +22,13 @@ return (
         padding: 20,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: BG_COLOR,
     }}
     >
+    <Image
+        source={IMG.LOGO}
+        style={{ width: 180, height: 72, resizeMode: 'contain', marginBottom: 30 }}
+    />
     <View style={{ width: '100%' }}>
         <CustomTextInput
         label={'Email Address'}
@@ -54,7 +62,7 @@ return (
     <CustomButton
         label={'LOGIN'}
         containerStyle={{
-        backgroundColor: 'blue',
+        backgroundColor: '#801D2D',
         borderRadius: 10,
         marginVertical: 20,
         width: '80%',
@@ -69,9 +77,9 @@ return (
             'Invalid Credentials',
             'Please enter valid email address and password',
             );
-
             return;
         }
+        login();
         }}
     />
 
@@ -84,7 +92,7 @@ return (
     >
         <Text>Create an account?</Text>
         <TouchableOpacity onPress={() => navigation.navigate(ROUTES.REGISTER)}>
-        <Text style={{ color: 'red', marginLeft: 10, fontWeight: 'bold' }}>
+        <Text style={{ color: '#801D2D', marginLeft: 10, fontWeight: 'bold' }}>
             Register
         </Text>
         </TouchableOpacity>

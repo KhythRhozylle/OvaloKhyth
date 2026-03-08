@@ -17,7 +17,11 @@ return (
         headerShown: false,
         }}
     />
-    <Stack.Screen name={ROUTES.REGISTER} component={Register} />
+    <Stack.Screen
+        name={ROUTES.REGISTER}
+        component={Register}
+        options={{ headerShown: false }}
+    />
     </Stack.Navigator>
 );
 };

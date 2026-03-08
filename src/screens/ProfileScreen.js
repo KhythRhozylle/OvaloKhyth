@@ -1,5 +1,8 @@
 import { Image, Text, View } from 'react-native';
 import { IMG } from '../utils';
+
+const BG_COLOR = '#FDE4E4'; // Pale blush - complements the red florynn logo
+
 const ProfileScreen = () => {
 return (
     <View
@@ -7,15 +10,12 @@ return (
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        borderWidth: 3,
-        borderColor: 'blue',
+        backgroundColor: BG_COLOR,
     }}
     >
     <Image
-        source={{
-        uri: IMG.LOGO,
-        }}
-        style={{ width: 200, height: 200 }}
+        source={IMG.LOGO}
+        style={{ width: 200, height: 80, resizeMode: 'contain' }}
     />
     <Text style={{ fontSize: 40 }}>ProfileScreen</Text>
     </View>
