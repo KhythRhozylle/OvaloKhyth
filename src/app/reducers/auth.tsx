@@ -1,0 +1,98 @@
+import {
+  USER_LOGIN_REQUEST,
+  USER_LOGIN_COMPLETE,
+  USER_LOGIN_ERROR,
+  RESET_USER_LOGIN,
+  USER_REGISTER_REQUEST,
+  USER_REGISTER_COMPLETE,
+  USER_REGISTER_ERROR,
+  AuthAction,
+  AuthResponse,
+} from '../actions';
+
+export interface AuthState {
+  data: AuthResponse | null;
+  isLoading: boolean;
+  isError: boolean;
+  error: string | null;
+  isRegistering: boolean;
+  isRegisterError: boolean;
+  registerError: string | null;
+  registerData: AuthResponse | null;
+}
+
+const INITIAL_STATE: AuthState = {
+  data: null,
+  isLoading: false,
+  isError: false,
+  error: null,
+  isRegistering: false,
+  isRegisterError: false,
+  registerError: null,
+  registerData: null,
+};
+
+export default function reducer(state: AuthState = INITIAL_STATE, action: AuthAction): AuthState {
+  console.log(action.type);
+  switch (action.type) {
+    case USER_LOGIN_REQUEST:
+      return {
+        ...state,
+        data: null,
+        isLoading: true,
+        isError: false,
+        error: null,
+      };
+
+    case USER_LOGIN_COMPLETE:
+      return {
+        ...state,
+        data: action.payload || null,
+        isLoading: false,
+        isError: false,
+        error: null,
+      };
+
+    case USER_LOGIN_ERROR:
+      return {
+        ...state,
+        data: null,
+        isLoading: false,
+        isError: true,
+        error: action.error || 'Login failed',
+      };
+
+    case USER_REGISTER_REQUEST:
+      return {
+        ...state,
+        registerData: null,
+        isRegistering: true,
+        isRegisterError: false,
+        registerError: null,
+      };
+
+    case USER_REGISTER_COMPLETE:
+      return {
+        ...state,
+        registerData: action.payload || null,
+        isRegistering: false,
+        isRegisterError: false,
+        registerError: null,
+      };
+
+    case USER_REGISTER_ERROR:
+      return {
+        ...state,
+        registerData: null,
+        isRegistering: false,
+        isRegisterError: true,
+        registerError: action.error || 'Registration failed',
+      };
+
+    case RESET_USER_LOGIN:
+      return INITIAL_STATE;
+
+    default:
+      return state;
+  }
+}
