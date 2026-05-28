@@ -35,3 +35,18 @@ export function normalizeLoginResponse(data) {
     const user = data?.user || data?.data?.user || null;
     return { token, user };
 }
+
+/** Display label for account type in the mobile app. */
+export function formatUserRoleLabel(user) {
+    if (!user) {
+        return 'User';
+    }
+    const roles = getUserRoles(user);
+    if (roles.includes('ROLE_ADMIN')) {
+        return 'Admin';
+    }
+    if (roles.includes('ROLE_STAFF')) {
+        return 'Staff';
+    }
+    return 'User';
+}

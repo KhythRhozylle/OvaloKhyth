@@ -27,11 +27,13 @@ import { PROFILE_COPY } from '../../constants/copy';
 import { COLORS, RADIUS, SHADOW, SPACING } from '../../constants/theme';
 import { getCartItemCount, getCartSubtotal } from '../../utils/cart';
 import {
+    EMPTY_PROFILE,
     isProfileComplete,
     loadCustomerProfile,
     mergeProfileWithAuth,
 } from '../../utils/customerProfile';
 import { getOrderStatusLabel } from '../../utils/orderStatus';
+import { formatUserRoleLabel } from '../../utils/auth';
 import { formatPrice, getProductImage } from '../../utils/product';
 import { ROUTES } from '../../utils';
 
@@ -113,25 +115,40 @@ const MoreScreen = () => {
     }, [hydrate]);
 
     useEffect(() => {
+        if (!isLoggedIn) {
+            setOrders([]);
+            setOrdersLoading(false);
+            return;
+        }
         if (profile?.email) {
             loadOrders(profile.email);
         }
-    }, [profile?.email, loadOrders]);
+    }, [isLoggedIn, profile?.email, loadOrders]);
 
     useFocusEffect(
         useCallback(() => {
-            if (profile?.email) {
-                loadOrders(profile.email);
+            if (!isLoggedIn) {
+                setOrders([]);
+                return undefined;
             }
             if (!profile?.email) {
                 return undefined;
             }
+            loadOrders(profile.email);
             const pollId = setInterval(() => {
                 loadOrders(profile.email);
             }, 15000);
             return () => clearInterval(pollId);
-        }, [profile?.email, loadOrders]),
+        }, [isLoggedIn, profile?.email, loadOrders]),
     );
+
+    const handleLogout = () => {
+        dispatch(authLogout());
+        dispatch(cartClear());
+        setOrders([]);
+        setOrdersLoading(false);
+        setProfile({ ...EMPTY_PROFILE });
+    };
 
     const goCheckout = () => {
         if (!items.length) {
@@ -315,11 +332,15 @@ const MoreScreen = () => {
                 }}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl
-                        refreshing={ordersLoading}
-                        onRefresh={() => profile?.email && loadOrders(profile.email)}
-                        colors={[COLORS.florynn.primary]}
-                    />
+                    isLoggedIn ? (
+                        <RefreshControl
+                            refreshing={ordersLoading}
+                            onRefresh={() =>
+                                profile?.email && loadOrders(profile.email)
+                            }
+                            colors={[COLORS.florynn.primary]}
+                        />
+                    ) : undefined
                 }
             >
                 <Text
@@ -340,7 +361,9 @@ const MoreScreen = () => {
                         marginBottom: 16,
                     }}
                 >
-                    Your cart, orders, and delivery details.
+                    {isLoggedIn
+                        ? 'Your cart, orders, and delivery details.'
+                        : 'Your cart and delivery details. Sign in to see your orders.'}
                 </Text>
 
                 {/* Account */}
@@ -361,11 +384,18 @@ const MoreScreen = () => {
                             <Text style={{ color: COLORS.textMuted, marginTop: 4 }}>
                                 {authUser.email}
                             </Text>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    dispatch(authLogout());
-                                    dispatch(cartClear());
+                            <Text
+                                style={{
+                                    color: COLORS.florynn.primaryDark,
+                                    marginTop: 6,
+                                    fontSize: 12,
+                                    fontWeight: '700',
                                 }}
+                            >
+                                Account: {formatUserRoleLabel(authUser)}
+                            </Text>
+                            <TouchableOpacity
+                                onPress={handleLogout}
                                 style={{ marginTop: 12 }}
                             >
                                 <Text
@@ -481,83 +511,105 @@ const MoreScreen = () => {
                     )}
                 </View>
 
-                {/* My orders */}
-                <View
-                    style={{
-                        backgroundColor: COLORS.surface,
-                        borderRadius: RADIUS.card,
-                        padding: 18,
-                        ...SHADOW.card,
-                    }}
-                >
-                    <Text style={{ fontSize: 15, fontWeight: '700', marginBottom: 12 }}>
-                        {PROFILE_COPY.myOrders}
-                    </Text>
-                    {ordersLoading ? (
-                        <ActivityIndicator color={COLORS.florynn.primary} />
-                    ) : orders.length === 0 ? (
-                        <Text style={{ color: COLORS.textMuted, fontSize: 14 }}>
-                            {PROFILE_COPY.noOrders}
+                {isLoggedIn ? (
+                    <View
+                        style={{
+                            backgroundColor: COLORS.surface,
+                            borderRadius: RADIUS.card,
+                            padding: 18,
+                            ...SHADOW.card,
+                        }}
+                    >
+                        <Text style={{ fontSize: 15, fontWeight: '700', marginBottom: 12 }}>
+                            {PROFILE_COPY.myOrders}
                         </Text>
-                    ) : (
-                        orders.map(order => (
-                            <TouchableOpacity
-                                key={order.orderGroupId || String(order.orderDate)}
-                                onPress={() =>
-                                    navigation.navigate(ROUTES.ORDER_DETAIL, {
-                                        orderGroupId: order.orderGroupId,
-                                        email: profile?.email,
-                                    })
-                                }
-                                style={{
-                                    paddingVertical: 12,
-                                    borderBottomWidth: 1,
-                                    borderBottomColor: COLORS.border,
-                                }}
-                            >
-                                <View
+                        {ordersLoading ? (
+                            <ActivityIndicator color={COLORS.florynn.primary} />
+                        ) : orders.length === 0 ? (
+                            <Text style={{ color: COLORS.textMuted, fontSize: 14 }}>
+                                {PROFILE_COPY.noOrders}
+                            </Text>
+                        ) : (
+                            orders.map(order => (
+                                <TouchableOpacity
+                                    key={order.orderGroupId || String(order.orderDate)}
+                                    onPress={() =>
+                                        navigation.navigate(ROUTES.ORDER_DETAIL, {
+                                            orderGroupId: order.orderGroupId,
+                                            email: profile?.email,
+                                        })
+                                    }
                                     style={{
-                                        flexDirection: 'row',
-                                        justifyContent: 'space-between',
+                                        paddingVertical: 12,
+                                        borderBottomWidth: 1,
+                                        borderBottomColor: COLORS.border,
                                     }}
                                 >
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        {thumbsForOrder(order).length ? (
-                                            <View style={{ flexDirection: 'row', marginRight: 10 }}>
-                                                {thumbsForOrder(order).map((uri, idx) => (
-                                                    <Image
-                                                        key={`${order.orderGroupId || 'order'}-${idx}`}
-                                                        source={{ uri }}
-                                                        style={{
-                                                            width: 28,
-                                                            height: 28,
-                                                            borderRadius: 10,
-                                                            marginLeft: idx === 0 ? 0 : -8,
-                                                            borderWidth: 2,
-                                                            borderColor: COLORS.surface,
-                                                            backgroundColor: COLORS.imageBg,
-                                                        }}
-                                                    />
-                                                ))}
-                                            </View>
-                                        ) : null}
-                                        <Text style={{ fontWeight: '600', color: COLORS.text }}>
-                                            {formatPrice(order.total)}
-                                        </Text>
-                                    </View>
+                                    <View
+                                        style={{
+                                            flexDirection: 'row',
+                                            justifyContent: 'space-between',
+                                        }}
+                                    >
+                                        <View
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                            }}
+                                        >
+                                            {thumbsForOrder(order).length ? (
+                                                <View
+                                                    style={{
+                                                        flexDirection: 'row',
+                                                        marginRight: 10,
+                                                    }}
+                                                >
+                                                    {thumbsForOrder(order).map((uri, idx) => (
+                                                        <Image
+                                                            key={`${order.orderGroupId || 'order'}-${idx}`}
+                                                            source={{ uri }}
+                                                            style={{
+                                                                width: 28,
+                                                                height: 28,
+                                                                borderRadius: 10,
+                                                                marginLeft: idx === 0 ? 0 : -8,
+                                                                borderWidth: 2,
+                                                                borderColor: COLORS.surface,
+                                                                backgroundColor: COLORS.imageBg,
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </View>
+                                            ) : null}
+                                            <Text
+                                                style={{
+                                                    fontWeight: '600',
+                                                    color: COLORS.text,
+                                                }}
+                                            >
+                                                {formatPrice(order.total)}
+                                            </Text>
+                                        </View>
 
-                                    {renderOrderStatusAction(order)}
-                                </View>
-                                <Text style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 4 }}>
-                                    {(order.items || []).length} item(s)
-                                    {order.orderDate
-                                        ? ` · ${new Date(order.orderDate).toLocaleDateString()}`
-                                        : ''}
-                                </Text>
-                            </TouchableOpacity>
-                        ))
-                    )}
-                </View>
+                                        {renderOrderStatusAction(order)}
+                                    </View>
+                                    <Text
+                                        style={{
+                                            fontSize: 12,
+                                            color: COLORS.textMuted,
+                                            marginTop: 4,
+                                        }}
+                                    >
+                                        {(order.items || []).length} item(s)
+                                        {order.orderDate
+                                            ? ` · ${new Date(order.orderDate).toLocaleDateString()}`
+                                            : ''}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))
+                        )}
+                    </View>
+                ) : null}
             </ScrollView>
         </View>
     );
