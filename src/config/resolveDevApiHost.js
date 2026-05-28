@@ -40,6 +40,9 @@ export function getDevApiHostCandidates() {
     add(fromLocal);
     if (Platform.OS === 'android') {
         add('10.0.2.2');
+        add('127.0.0.1');
+    } else {
+        add('127.0.0.1');
     }
 
     return hosts.map(host => `http://${host}:${port}`);
@@ -51,9 +54,9 @@ export function getPrimaryDevApiBaseUrl() {
     if (metro) {
         return `http://${metro}:${port}`;
     }
-    if (Platform.OS === 'android') {
-        const host = localConfig?.androidHost ?? '10.0.2.2';
-        return `http://${host}:${port}`;
-    }
-    return `http://${localConfig?.iosHost ?? '127.0.0.1'}:${port}`;
+    const host =
+        Platform.OS === 'android'
+            ? localConfig?.androidHost ?? '10.0.2.2'
+            : localConfig?.iosHost ?? '127.0.0.1';
+    return `http://${host}:${port}`;
 }

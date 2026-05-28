@@ -21,16 +21,13 @@ if ($devices -notmatch "device$") {
     exit 1
 }
 
-adb reverse tcp:8000 tcp:8000 2>$null
-adb reverse tcp:8081 tcp:8081 2>$null
-
-# LAN IP works on physical phones when adb reverse does not
-powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'sync-api-host-lan.ps1') | Out-Null
-$lanLine = Get-Content (Join-Path $PSScriptRoot '..\src\config\api.local.js') -Raw
-if ($lanLine -match "androidHost:\s*'([^']+)'") {
-    $lanHost = $Matches[1]
-    Write-Host "Device found. API: http://${lanHost}:8000 (same Wi-Fi as PC)`n" -ForegroundColor Green
+Write-Host "Forwarding device port 8000 -> PC Symfony (127.0.0.1:8000)..." -ForegroundColor Cyan
+adb reverse tcp:8000 tcp:8000
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "adb reverse failed. Is Symfony running? Try: npm run symfony:start" -ForegroundColor Yellow
 }
+
+Write-Host "Device found. API base on Android: http://127.0.0.1:8000`n" -ForegroundColor Green
 
 if ($SkipBuild) {
     npx react-native start

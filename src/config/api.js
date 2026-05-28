@@ -1,52 +1,28 @@
 import { Platform } from 'react-native';
 
-import {
-    buildLocalBaseUrl,
-    getApiTarget,
-    getHostOverride,
-    getIosDevHost,
-    getLocalCandidateHosts,
-    getLocalPort,
-    getProductionBaseUrl,
-    isProductionTarget,
-} from './apiConfig';
-import { getDevApiBaseUrlSync } from './devApiBase';
+const API_PORT = 8000;
 
-export const SYMFONY_PROJECT_PATH = 'c:\\Users\\khyth\\Documents\\florynn';
+/** Set your PC LAN IP when testing on a physical device (e.g. '192.168.1.42'). */
+export const DEV_API_HOST_OVERRIDE = null;
 
 export function getApiBaseUrl() {
-    const hostOverride = getHostOverride();
-    if (hostOverride) {
-        return `http://${hostOverride}:${getLocalPort()}`;
+    if (DEV_API_HOST_OVERRIDE) {
+        return `http://${DEV_API_HOST_OVERRIDE}:${API_PORT}`;
     }
 
-    if (isProductionTarget()) {
-        return getProductionBaseUrl();
-    }
-
-    if (typeof __DEV__ !== 'undefined' && __DEV__) {
+    if (__DEV__) {
         if (Platform.OS === 'android') {
-            return getDevApiBaseUrlSync();
+            return `http://10.0.2.2:${API_PORT}`;
         }
-        return buildLocalBaseUrl(getIosDevHost());
+        return `http://127.0.0.1:${API_PORT}`;
     }
 
-    return getProductionBaseUrl();
-}
-
-export function getApiTargetLabel() {
-    return getApiTarget() === 'production' ? 'Railway (production)' : 'Local dev';
+    return 'https://your-domain.com';
 }
 
 export function getProductImageUrl(filename) {
     if (!filename) {
         return null;
     }
-    if (/^https?:\/\//i.test(filename)) {
-        return filename;
-    }
     return `${getApiBaseUrl()}/uploads/images/${filename}`;
 }
-
-export { getLocalCandidateHosts, getProductionBaseUrl, isProductionTarget };
-export { defaultAndroidApiBase } from './devApiBase';

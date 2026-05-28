@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "324805082591",
+    "project_id": "appdev-gilbero",
+    "storage_bucket": "appdev-gilbero.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:324805082591:android:6b72e46c70744efab6586a",
+        "android_client_info": {
+          "package_name": "com.helloworld"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "324805082591-561vpp0aa40qosliur00n75i6hl0mmei.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.helloworld",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "324805082591-d57n60dueduo5jalvq4r1l5pqnr4k3ug.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRg5vK2TtVJXX1ePBsPlwlkT8JFr5JNvE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "324805082591-d57n60dueduo5jalvq4r1l5pqnr4k3ug.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
