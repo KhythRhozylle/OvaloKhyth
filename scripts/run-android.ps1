@@ -1,5 +1,9 @@
-# Fix ADB and run React Native Android app
-# Use this when you get "device offline" errors
+# Fix ADB, forward port 8000 to Symfony, and run the Android app
+param(
+    [switch]$SkipBuild
+)
+
+$ErrorActionPreference = "Continue"
 
 Write-Host "Restarting ADB..." -ForegroundColor Cyan
 adb kill-server 2>$null
@@ -17,5 +21,19 @@ if ($devices -notmatch "device$") {
     exit 1
 }
 
-Write-Host "Device found. Running app...`n" -ForegroundColor Green
-npx react-native run-android
+adb reverse tcp:8000 tcp:8000 2>$null
+adb reverse tcp:8081 tcp:8081 2>$null
+
+# LAN IP works on physical phones when adb reverse does not
+powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'sync-api-host-lan.ps1') | Out-Null
+$lanLine = Get-Content (Join-Path $PSScriptRoot '..\src\config\api.local.js') -Raw
+if ($lanLine -match "androidHost:\s*'([^']+)'") {
+    $lanHost = $Matches[1]
+    Write-Host "Device found. API: http://${lanHost}:8000 (same Wi-Fi as PC)`n" -ForegroundColor Green
+}
+
+if ($SkipBuild) {
+    npx react-native start
+} else {
+    npx react-native run-android
+}

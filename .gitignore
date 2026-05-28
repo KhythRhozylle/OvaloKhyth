@@ -66,6 +66,9 @@ yarn-error.log
 # testing
 /coverage
 
+# Local API overrides (Symfony host/port per machine)
+src/config/api.local.js
+
 # Yarn
 .yarn/*
 !.yarn/patches

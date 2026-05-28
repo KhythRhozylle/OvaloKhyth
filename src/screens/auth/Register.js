@@ -1,38 +1,47 @@
-import { useState, useEffect } from 'react';
-import { Alert, Text, TouchableOpacity, View } from 'react-native';
-
+import { useEffect, useState } from 'react';
+import { Alert, Image, Text, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
-import AppHeader from '../../components/AppHeader';
+
+import AppTopBar from '../../components/AppTopBar';
 import CustomButton from '../../components/CustomButton';
 import CustomTextInput from '../../components/CustomTextInput';
+import ScreenContainer from '../../components/ScreenContainer';
 import { authRegister } from '../../app/actions';
+import { TERMS_TEXT } from '../../constants/copy';
+import { COLORS, RADIUS, SHADOW, SPACING } from '../../constants/theme';
 import { ROUTES } from '../../utils';
-
-const BG_COLOR = '#FDE4E4'; // Pale blush - complements the red florynn logo
-const PRIMARY_COLOR = '#801D2D';
 
 const Register = () => {
     const [name, setName] = useState('');
-    const [emailAdd, setEmailAdd] = useState('');
+    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [agreed, setAgreed] = useState(false);
     const dispatch = useDispatch();
     const navigation = useNavigation();
-    
-    const { isRegistering, isRegisterError, registerError, registerData } = useSelector(state => state.auth);
+
+    const { isRegistering, isRegisterError, registerError, registerData } =
+        useSelector(state => state.auth);
 
     useEffect(() => {
-        if (registerData && registerData.token) {
-            // Registration successful - navigate to login or home
-            Alert.alert('Success', 'Account created successfully! Please login.');
-            navigation.navigate(ROUTES.LOGIN);
+        if (registerData && !isRegistering && !isRegisterError) {
+            Alert.alert(
+                'Account created',
+                'You can sign in with your email and password.',
+                [{ text: 'Sign in', onPress: () => navigation.replace(ROUTES.LOGIN) }],
+            );
         }
-    }, [registerData, navigation]);
+    }, [registerData, isRegistering, isRegisterError, navigation]);
 
     const handleRegister = () => {
-        if (!name.trim() || !emailAdd.trim() || !password || !confirmPassword) {
+        if (!name.trim() || !email.trim() || !username.trim() || !password) {
             Alert.alert('Missing details', 'Please fill in all fields.');
+            return;
+        }
+        if (!agreed) {
+            Alert.alert('Terms', 'Please agree to the terms to continue.');
             return;
         }
         if (password !== confirmPassword) {
@@ -43,99 +52,249 @@ const Register = () => {
             Alert.alert('Weak password', 'Password must be at least 6 characters.');
             return;
         }
-        
-        dispatch(authRegister({ name, email: emailAdd, password }));
+        dispatch(
+            authRegister({
+                name: name.trim(),
+                email: email.trim(),
+                username: username.trim(),
+                password,
+            }),
+        );
     };
 
     return (
-        <View
-            style={{
-                flex: 1,
-                backgroundColor: BG_COLOR,
-            }}
-        >
-            <AppHeader title="Create account" subtitle="Join Florynn in just a few steps." />
-
+        <View style={{ flex: 1, backgroundColor: COLORS.background }}>
+            <AppTopBar showBack title="" showCart={false} />
             <View
+                pointerEvents="none"
                 style={{
-                    flex: 1,
-                    paddingHorizontal: 24,
-                    paddingTop: 24,
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 320,
+                    backgroundColor: 'rgba(127, 165, 100, 0.22)',
+                    transform: [{ scaleY: 1.1 }],
                 }}
-            >
-                <View style={{ width: '100%' }}>
-                    <CustomTextInput
-                        label="Full name"
-                        placeholder="Enter your name"
-                        value={val => setName(val)}
-                        containerStyle={{ marginBottom: 16 }}
-                        textStyle={{ fontSize: 15 }}
-                    />
-                    <CustomTextInput
-                        label="Email address"
-                        placeholder="Enter your email"
-                        value={val => setEmailAdd(val)}
-                        containerStyle={{ marginBottom: 16 }}
-                        textStyle={{ fontSize: 15 }}
-                    />
-                    <CustomTextInput
-                        label="Password"
-                        placeholder="Enter a password (min 6 characters)"
-                        value={val => setPassword(val)}
-                        containerStyle={{ marginBottom: 16 }}
-                        textStyle={{ fontSize: 15 }}
-                    />
-                    <CustomTextInput
-                        label="Confirm password"
-                        placeholder="Re-enter your password"
-                        value={val => setConfirmPassword(val)}
-                        containerStyle={{ marginBottom: 8 }}
-                        textStyle={{ fontSize: 15 }}
-                    />
-                </View>
+            />
+            <View
+                pointerEvents="none"
+                style={{
+                    position: 'absolute',
+                    bottom: -180,
+                    left: -140,
+                    width: 360,
+                    height: 360,
+                    borderRadius: 180,
+                    backgroundColor: 'rgba(15, 138, 58, 0.18)',
+                }}
+            />
 
-                <CustomButton
-                    label={isRegistering ? "Creating account..." : "Create account"}
-                    containerStyle={{
-                        backgroundColor: PRIMARY_COLOR,
-                        borderRadius: 999,
-                        marginVertical: 24,
-                        width: '100%',
-                    }}
-                    textStyle={{ color: 'white', fontWeight: '600', fontSize: 16 }}
-                    onPress={handleRegister}
-                    disabled={isRegistering}
-                />
-
-                {isRegisterError && (
-                    <Text style={{ 
-                        color: 'red', 
-                        textAlign: 'center', 
-                        marginBottom: 16,
-                        fontSize: 14 
-                    }}>
-                        {registerError}
-                    </Text>
-                )}
-
+            <ScreenContainer style={{ justifyContent: 'center', paddingTop: 0 }}>
                 <View
-                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}
+                    style={{
+                        alignSelf: 'center',
+                        width: '100%',
+                        maxWidth: 420,
+                        backgroundColor: 'rgba(255,255,255,0.92)',
+                        borderRadius: 26,
+                        padding: 18,
+                        borderWidth: 1,
+                        borderColor: 'rgba(220, 228, 216, 0.9)',
+                        ...SHADOW.card,
+                    }}
                 >
-                    <Text style={{ fontSize: 14 }}>Already have an account?</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate(ROUTES.LOGIN)}>
+                    <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 8 }}>
+                        <Image
+                            source={require('../../assets/brand/florynn_logo.png')}
+                            style={{ width: 160, height: 44 }}
+                            resizeMode="contain"
+                        />
                         <Text
                             style={{
-                                color: PRIMARY_COLOR,
-                                marginLeft: 8,
-                                fontWeight: '600',
-                                fontSize: 14,
+                                marginTop: 10,
+                                fontSize: 22,
+                                fontWeight: '900',
+                                color: COLORS.text,
+                                letterSpacing: -0.3,
                             }}
                         >
-                            Log in
+                            Register now!
+                        </Text>
+                        <Text
+                            style={{
+                                marginTop: 6,
+                                fontSize: 13,
+                                color: COLORS.textMuted,
+                                textAlign: 'center',
+                                lineHeight: 18,
+                            }}
+                        >
+                            Checkout our floral designs
+                        </Text>
+                    </View>
+
+                    <View style={{ marginTop: 12 }}>
+                        <CustomTextInput
+                            label=""
+                            placeholder="Full name"
+                            value={name}
+                            onChangeText={setName}
+                            autoCapitalize="words"
+                            textStyle={{
+                                borderRadius: RADIUS.pill,
+                                borderColor: 'rgba(0,0,0,0.06)',
+                                backgroundColor: 'rgba(255,255,255,0.95)',
+                                paddingVertical: 14,
+                            }}
+                        />
+                        <CustomTextInput
+                            label=""
+                            placeholder="Email Address"
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            containerStyle={{ marginTop: 12 }}
+                            textStyle={{
+                                borderRadius: RADIUS.pill,
+                                borderColor: 'rgba(0,0,0,0.06)',
+                                backgroundColor: 'rgba(255,255,255,0.95)',
+                                paddingVertical: 14,
+                            }}
+                        />
+                        <CustomTextInput
+                            label=""
+                            placeholder="Username"
+                            value={username}
+                            onChangeText={setUsername}
+                            autoCapitalize="none"
+                            containerStyle={{ marginTop: 12 }}
+                            textStyle={{
+                                borderRadius: RADIUS.pill,
+                                borderColor: 'rgba(0,0,0,0.06)',
+                                backgroundColor: 'rgba(255,255,255,0.95)',
+                                paddingVertical: 14,
+                            }}
+                        />
+                        <CustomTextInput
+                            label=""
+                            placeholder="Password (min 6 characters)"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry
+                            containerStyle={{ marginTop: 12 }}
+                            textStyle={{
+                                borderRadius: RADIUS.pill,
+                                borderColor: 'rgba(0,0,0,0.06)',
+                                backgroundColor: 'rgba(255,255,255,0.95)',
+                                paddingVertical: 14,
+                            }}
+                        />
+                        <CustomTextInput
+                            label=""
+                            placeholder="Confirm password"
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                            secureTextEntry
+                            containerStyle={{ marginTop: 12 }}
+                            textStyle={{
+                                borderRadius: RADIUS.pill,
+                                borderColor: 'rgba(0,0,0,0.06)',
+                                backgroundColor: 'rgba(255,255,255,0.95)',
+                                paddingVertical: 14,
+                            }}
+                        />
+                    </View>
+
+                    <TouchableOpacity
+                        onPress={() => setAgreed(!agreed)}
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'flex-start',
+                            marginTop: 14,
+                            paddingHorizontal: 4,
+                        }}
+                        activeOpacity={0.85}
+                    >
+                        <View
+                            style={{
+                                width: 22,
+                                height: 22,
+                                borderRadius: 6,
+                                borderWidth: 1.5,
+                                borderColor: COLORS.florynn.primary,
+                                backgroundColor: agreed ? COLORS.florynn.primary : COLORS.white,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: 10,
+                                marginTop: 1,
+                            }}
+                        >
+                            {agreed ? (
+                                <Text style={{ color: COLORS.white, fontSize: 12, fontWeight: '900' }}>
+                                    ✓
+                                </Text>
+                            ) : null}
+                        </View>
+                        <Text
+                            style={{
+                                flex: 1,
+                                fontSize: 12,
+                                color: COLORS.textMuted,
+                                lineHeight: 18,
+                            }}
+                        >
+                            {TERMS_TEXT}
                         </Text>
                     </TouchableOpacity>
+
+                    {isRegisterError ? (
+                        <Text
+                            style={{
+                                color: COLORS.error,
+                                marginTop: 12,
+                                fontSize: 13,
+                                textAlign: 'center',
+                            }}
+                        >
+                            {registerError}
+                        </Text>
+                    ) : null}
+
+                    <CustomButton
+                        label={isRegistering ? 'Creating account…' : 'Enter'}
+                        variant="florynn"
+                        fullWidth
+                        pill
+                        onPress={handleRegister}
+                        disabled={isRegistering}
+                        style={{
+                            marginTop: 16,
+                            borderRadius: RADIUS.pill,
+                            backgroundColor: COLORS.florynn.primary,
+                            borderColor: COLORS.florynn.primary,
+                        }}
+                        textStyle={{ letterSpacing: 0.2 }}
+                    />
+
+                    <View style={{ alignItems: 'center', marginTop: 16 }}>
+                        <TouchableOpacity onPress={() => navigation.navigate(ROUTES.LOGIN)}>
+                            <Text style={{ fontSize: 13, color: COLORS.textMuted }}>
+                                Already have an account?{' '}
+                                <Text
+                                    style={{
+                                        color: COLORS.florynn.primaryDark,
+                                        fontWeight: '800',
+                                    }}
+                                >
+                                    Sign in
+                                </Text>
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </View>
+            </ScreenContainer>
         </View>
     );
 };

@@ -1,34 +1,48 @@
-// utils
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { useEffect } from 'react';
 import { Platform, StatusBar, useColorScheme } from 'react-native';
-import { useSelector } from 'react-redux';
 
+import ApiGate from '../components/ApiGate';
 import ReduxProvider from '../context/ReduxProvider';
-import AuthNav from './AuthNav';
-import MainNav from './MainNav';
-
-const RootNavigator = () => {
-    const { data } = useSelector(state => state.auth);
-    const isLoggedIn = !!(data && data.token);
-    
-    return isLoggedIn ? <MainNav /> : <AuthNav />;
-};
+import { ShopProvider } from '../context/ShopProvider';
+import { getApiBaseUrl, getApiTargetLabel } from '../config/api';
+import { loadDevApiBaseUrl } from '../config/devApiBase';
+import { logApi } from '../config/apiLogger';
+import AuthNavigationSync from './AuthNavigationSync';
+import RootNav from './RootNav';
 
 export default () => {
+    const navigationRef = useNavigationContainerRef();
+    useEffect(() => {
+        if (__DEV__) {
+            loadDevApiBaseUrl().then(() => {
+                logApi('app ready', {
+                    target: getApiTargetLabel(),
+                    base: getApiBaseUrl(),
+                });
+            });
+        }
+    }, []);
     const isDarkMode = useColorScheme() === 'dark';
 
     useEffect(() => {
         if (Platform.OS === 'android') {
-            StatusBar.setBarStyle('dark-content', true);
+            StatusBar.setBarStyle('light-content', true);
+            StatusBar.setTranslucent(true);
+            StatusBar.setBackgroundColor('transparent');
         }
     }, [isDarkMode]);
 
     return (
         <ReduxProvider>
-            <NavigationContainer>
-                <RootNavigator />
-            </NavigationContainer>
+            <ShopProvider>
+                <ApiGate>
+                    <NavigationContainer ref={navigationRef}>
+                        <AuthNavigationSync navigationRef={navigationRef} />
+                        <RootNav />
+                    </NavigationContainer>
+                </ApiGate>
+            </ShopProvider>
         </ReduxProvider>
     );
 };

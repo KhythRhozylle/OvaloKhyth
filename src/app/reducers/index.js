@@ -5,23 +5,32 @@ import createSagaMiddleware from 'redux-saga';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import auth from '../reducers/auth.js';
+import cart from '../reducers/cart.js';
+import products from '../reducers/products.js';
 import rootSaga from '../sagas';
 
 const sagaMiddleware = createSagaMiddleware();
 const rootPersistConfig = {
     key: 'root',
     storage: AsyncStorage,
-    blacklist: ['auth'],
+    blacklist: ['auth', 'cart', 'products'],
 };
 
 const authPersistConfig = {
     key: 'auth',
     storage: AsyncStorage,
-    blacklist: [], // Include all auth fields including registration
+    blacklist: [],
+};
+
+const cartPersistConfig = {
+    key: 'cart',
+    storage: AsyncStorage,
 };
 
 const rootReducer = combineReducers({
     auth: persistReducer(authPersistConfig, auth),
+    cart: persistReducer(cartPersistConfig, cart),
+    products,
 });
 
 const persistedReducer = persistReducer(rootPersistConfig, rootReducer);

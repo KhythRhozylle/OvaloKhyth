@@ -1,4 +1,13 @@
-import { USER_LOGIN_REQUEST, USER_LOGIN_COMPLETE, USER_LOGIN_ERROR, RESET_USER_LOGIN, USER_REGISTER_REQUEST, USER_REGISTER_COMPLETE, USER_REGISTER_ERROR } from "../actions";
+import {
+  USER_LOGIN_REQUEST,
+  USER_LOGIN_COMPLETE,
+  USER_LOGIN_ERROR,
+  RESET_USER_LOGIN,
+  USER_REGISTER_REQUEST,
+  USER_REGISTER_COMPLETE,
+  USER_REGISTER_ERROR,
+  RESET_REGISTER,
+} from '../actions';
 
 const INITIALSTATE = {
   data: null,
@@ -12,7 +21,6 @@ const INITIALSTATE = {
 };
 
 export default function reducer(state = INITIALSTATE, action) {
-  console.log(action.type);
   switch (action.type) {
     case USER_LOGIN_REQUEST:
       return {
@@ -70,6 +78,15 @@ export default function reducer(state = INITIALSTATE, action) {
 
     case RESET_USER_LOGIN:
       return INITIALSTATE;
+
+    case RESET_REGISTER:
+      return {
+        ...state,
+        registerData: null,
+        isRegistering: false,
+        isRegisterError: false,
+        registerError: null,
+      };
 
     default:
       return state;
