@@ -1,4 +1,5 @@
-const STAFF_ROLES = ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN', 'ROLE_STAFF'];
+const ADMIN_ROLES = ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'];
+const STAFF_ROLES = ['ROLE_STAFF', ...ADMIN_ROLES];
 
 export function getUserRoles(user) {
     if (!user) {
@@ -30,23 +31,25 @@ export function isCustomerUser(user) {
     return roles.includes('ROLE_USER');
 }
 
-export function normalizeLoginResponse(data) {
-    const token = data?.token || data?.access_token;
-    const user = data?.user || data?.data?.user || null;
-    return { token, user };
-}
-
-/** Display label for account type in the mobile app. */
-export function formatUserRoleLabel(user) {
-    if (!user) {
-        return 'User';
+/** Human-readable role for the mobile profile (never "Staff" for app customers). */
+export function getMobileRoleLabel(user) {
+    if (!user || isStaffOrAdmin(user)) {
+        return '';
     }
-    const roles = getUserRoles(user);
-    if (roles.includes('ROLE_ADMIN')) {
-        return 'Admin';
-    }
-    if (roles.includes('ROLE_STAFF')) {
-        return 'Staff';
+    if (user.roleLabel) {
+        return user.roleLabel;
     }
     return 'User';
+}
+
+export function normalizeLoginResponse(data) {
+    const token = data?.token || data?.access_token;
+    const rawUser = data?.user || data?.data?.user || null;
+    const user = rawUser
+        ? {
+              ...rawUser,
+              roleLabel: getMobileRoleLabel(rawUser),
+          }
+        : null;
+    return { token, user };
 }

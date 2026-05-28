@@ -21,7 +21,7 @@ function buildLoginCompleteAction(raw, fallbackEmail) {
 
     if (user && !isCustomerUser(user)) {
         throw new Error(
-            'This account is for staff only. Please use the admin portal.',
+            'This account is for admin use only. Please use the admin portal.',
         );
     }
 

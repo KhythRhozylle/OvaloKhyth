@@ -58,14 +58,36 @@ export async function saveCustomerProfile(profile) {
     return saved;
 }
 
-/** Map auth user + saved profile for checkout. */
+export async function clearCustomerProfile() {
+    await AsyncStorage.removeItem(STORAGE_KEY);
+}
+
+function normalizeEmail(email) {
+    return (email || '').trim().toLowerCase();
+}
+
+/** Map auth user + saved profile for checkout (scoped to the signed-in account). */
 export function mergeProfileWithAuth(saved, authUser) {
     if (!authUser) {
-        return saved;
+        return saved ?? { ...EMPTY_PROFILE };
     }
+
+    const authEmail = normalizeEmail(authUser.email);
+    const savedEmail = normalizeEmail(saved?.email);
+    const sameAccount = authEmail && savedEmail === authEmail;
+
+    if (!sameAccount) {
+        return {
+            ...EMPTY_PROFILE,
+            fullName: (authUser.name || '').trim(),
+            email: (authUser.email || '').trim(),
+        };
+    }
+
     return {
+        ...EMPTY_PROFILE,
         ...saved,
-        fullName: saved.fullName || authUser.name || '',
-        email: saved.email || authUser.email || '',
+        fullName: (saved.fullName || authUser.name || '').trim(),
+        email: (authUser.email || '').trim(),
     };
 }

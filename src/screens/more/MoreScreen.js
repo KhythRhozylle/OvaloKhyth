@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Image,
@@ -28,13 +28,14 @@ import { COLORS, RADIUS, SHADOW, SPACING } from '../../constants/theme';
 import { getCartItemCount, getCartSubtotal } from '../../utils/cart';
 import {
     EMPTY_PROFILE,
+    clearCustomerProfile,
     isProfileComplete,
     loadCustomerProfile,
     mergeProfileWithAuth,
 } from '../../utils/customerProfile';
 import { getOrderStatusLabel } from '../../utils/orderStatus';
-import { formatUserRoleLabel } from '../../utils/auth';
 import { formatPrice, getProductImage } from '../../utils/product';
+import { getMobileRoleLabel } from '../../utils/auth';
 import { ROUTES } from '../../utils';
 
 const MoreScreen = () => {
@@ -44,6 +45,8 @@ const MoreScreen = () => {
     const authData = useSelector(state => state.auth?.data);
     const authUser = authData?.user;
     const isLoggedIn = !!(authData?.token);
+    const orderEmail = (authUser?.email || '').trim().toLowerCase();
+    const lastOrderEmailRef = useRef('');
 
     const [profile, setProfile] = useState(null);
     const [orders, setOrders] = useState([]);
@@ -115,39 +118,41 @@ const MoreScreen = () => {
     }, [hydrate]);
 
     useEffect(() => {
-        if (!isLoggedIn) {
+        if (!isLoggedIn || !orderEmail) {
             setOrders([]);
             setOrdersLoading(false);
+            lastOrderEmailRef.current = '';
             return;
         }
-        if (profile?.email) {
-            loadOrders(profile.email);
+        if (lastOrderEmailRef.current !== orderEmail) {
+            setOrders([]);
+            lastOrderEmailRef.current = orderEmail;
         }
-    }, [isLoggedIn, profile?.email, loadOrders]);
+        loadOrders(orderEmail);
+    }, [isLoggedIn, orderEmail, loadOrders]);
 
     useFocusEffect(
         useCallback(() => {
-            if (!isLoggedIn) {
+            if (!isLoggedIn || !orderEmail) {
                 setOrders([]);
                 return undefined;
             }
-            if (!profile?.email) {
-                return undefined;
-            }
-            loadOrders(profile.email);
+            loadOrders(orderEmail);
             const pollId = setInterval(() => {
-                loadOrders(profile.email);
+                loadOrders(orderEmail);
             }, 15000);
             return () => clearInterval(pollId);
-        }, [isLoggedIn, profile?.email, loadOrders]),
+        }, [isLoggedIn, orderEmail, loadOrders]),
     );
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await clearCustomerProfile();
         dispatch(authLogout());
         dispatch(cartClear());
         setOrders([]);
         setOrdersLoading(false);
         setProfile({ ...EMPTY_PROFILE });
+        lastOrderEmailRef.current = '';
     };
 
     const goCheckout = () => {
@@ -281,7 +286,7 @@ const MoreScreen = () => {
                     onPress={() => {
                         navigation.navigate(ROUTES.PAY, {
                             order,
-                            email: profile?.email,
+                            email: orderEmail,
                         });
                     }}
                     style={{
@@ -335,9 +340,7 @@ const MoreScreen = () => {
                     isLoggedIn ? (
                         <RefreshControl
                             refreshing={ordersLoading}
-                            onRefresh={() =>
-                                profile?.email && loadOrders(profile.email)
-                            }
+                            onRefresh={() => orderEmail && loadOrders(orderEmail)}
                             colors={[COLORS.florynn.primary]}
                         />
                     ) : undefined
@@ -392,7 +395,7 @@ const MoreScreen = () => {
                                     fontWeight: '700',
                                 }}
                             >
-                                Account: {formatUserRoleLabel(authUser)}
+                                {getMobileRoleLabel(authUser)}
                             </Text>
                             <TouchableOpacity
                                 onPress={handleLogout}
@@ -536,7 +539,7 @@ const MoreScreen = () => {
                                     onPress={() =>
                                         navigation.navigate(ROUTES.ORDER_DETAIL, {
                                             orderGroupId: order.orderGroupId,
-                                            email: profile?.email,
+                                            email: orderEmail,
                                         })
                                     }
                                     style={{

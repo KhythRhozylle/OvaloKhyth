@@ -7,6 +7,7 @@ import CustomButton from '../../components/CustomButton';
 import ScreenContainer from '../../components/ScreenContainer';
 import { COLORS, RADIUS, SHADOW } from '../../constants/theme';
 import { authLogout, cartClear } from '../../app/actions';
+import { clearCustomerProfile } from '../../utils/customerProfile';
 import { ROUTES } from '../../utils';
 
 const AccountScreen = () => {
@@ -55,7 +56,8 @@ const AccountScreen = () => {
                 <CustomButton
                     label="Log out"
                     fullWidth
-                    onPress={() => {
+                    onPress={async () => {
+                        await clearCustomerProfile();
                         dispatch(authLogout());
                         dispatch(cartClear());
                         navigation.navigate('MainTabs');

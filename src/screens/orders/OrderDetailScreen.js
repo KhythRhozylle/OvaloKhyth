@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
 
 import AppTopBar from '../../components/AppTopBar';
 import OrderStatusTracker from '../../components/OrderStatusTracker';
@@ -11,11 +12,17 @@ import { formatPrice } from '../../utils/product';
 
 const OrderDetailScreen = () => {
     const route = useRoute();
+    const authEmail = useSelector(state => state.auth?.data?.user?.email);
     const orderGroupId = route.params?.orderGroupId;
-    const email = route.params?.email;
+    const email = (authEmail || route.params?.email || '').trim().toLowerCase();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    useEffect(() => {
+        setOrder(null);
+        setError(null);
+    }, [orderGroupId, email]);
 
     const load = useCallback(async () => {
         if (!orderGroupId || !email) {
